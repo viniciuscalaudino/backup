@@ -22,11 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// ajuda aqui e no options
+
 $uri = strtok($_SERVER['REQUEST_URI'], '?');
 
 $productId = null;
-if (preg_match('#^/api/produtos/(\d+)#', $uri, $matches)) {
+if (preg_match('#^/api/produtos/(\d+)/?$#', $uri, $matches)) {
     $productId = (int)$matches[1];
     $uri = '/api/produtos';
 }
@@ -43,7 +43,6 @@ match ($uri) {
 
 function notFound(): void
 {
-    global $uri;
-    http_response_code(403);
-    echo json_encode(['error' => 'Not found']);
+    http_response_code(404);
+    echo json_encode(['error' => 'Rota não encontrada']);
 }

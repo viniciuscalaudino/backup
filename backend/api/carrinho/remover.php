@@ -19,4 +19,10 @@ $stmt = db()->prepare(
 );
 $stmt->execute([$itemId, $_SESSION['user_id']]);
 
+if ($stmt->rowCount() === 0) {
+	http_response_code(404);
+	echo json_encode(['error' => 'Item não encontrado no carrinho']);
+	exit;
+}
+
 echo json_encode(['message' => 'Item removido']);

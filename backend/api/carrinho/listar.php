@@ -21,7 +21,7 @@ $stmt = db()->prepare(
 );
 $stmt->execute([$_SESSION['user_id']]);
 $items = $stmt->fetchAll();
-$total = array_sum(array_column($items, 'subtotal'));
+$total = round(array_sum(array_column($items, 'subtotal')), 2);
 
 echo json_encode([
 	'items' => $items,

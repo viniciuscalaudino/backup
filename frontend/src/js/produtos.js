@@ -1,6 +1,10 @@
 (() => {
   const grid = document.getElementById("produtos");
   const detalhe = document.getElementById("produto");
+  const apiBase =
+    window.API_BASE_URL ||
+    `${window.location.protocol}//${window.location.hostname}:8000/api`;
+  const imagensBase = apiBase.replace(/\/api$/, "") + "/images";
 
   function escapar(valor = "") {
     return String(valor).replace(
@@ -29,32 +33,34 @@
     return [];
   }
 
-  function imagemDoProduto(produto) {
-    if (produto.image) {
-      const imagem = String(produto.image).trim();
-      if (imagem.startsWith("data:")) {
-        return imagem;
-      }
-      const caminhoBackend = imagem.match(
-        /(?:uploads\/produtos|produtos)\/([^?#]+)/i,
-      );
-      if (caminhoBackend) {
-        return `/images/${caminhoBackend[1]
-          .split("/")
-          .map(encodeURIComponent)
-          .join("/")}`;
-      }
-      if (/^(https?:)?\/\//i.test(imagem)) return imagem;
-      if (imagem.startsWith("/images/")) return imagem;
+    async function atualizarBadgeCarrinho() {
+    const badge = document.getElementById("badge");
+    if (!badge) return;
 
-      const caminho = imagem.replace(/^\/+/, "");
-      const arquivo = caminho
-        .replace(/^backend\//i, "")
-        .replace(/^uploads\/produtos\//i, "")
-        .replace(/^produtos\//i, "");
-      return `/images/${encodeURIComponent(arquivo)}`;
+    try {
+      const carrinho = await window.api("/carrinho");
+      const total = (carrinho.items || []).reduce(
+        (soma, item) => soma + Number(item.quantity),
+        0,
+      );
+      badge.textContent = total;
+      badge.hidden = total === 0;
+      document
+        .getElementById("btnCarrinho")
+        ?.setAttribute("aria-label", `Carrinho, ${total} itens`);
+    } catch {
+      badge.hidden = true;
     }
-    return /mouse/i.test(produto.name) ? "/images/estoque/image.png" : "";
+  }
+
+  function imagemDoProduto(produto) {
+    if (!produto.image) return "";
+    const imagem = String(produto.image).trim();
+    if (imagem.startsWith("data:") || /^(https?:)?\/\//i.test(imagem)) {
+      return imagem;
+    }
+    const arquivo = imagem.split("/").pop();
+    return `${imagensBase}/${encodeURIComponent(arquivo)}`;
   }
 
   async function carregarCategorias() {
@@ -213,5 +219,7 @@
     carregarCategorias().then(carregarProdutos);
   }
 
-  if (detalhe) carregarDetalhe();
+   if (detalhe) carregarDetalhe();
+
+  atualizarBadgeCarrinho();
 })();

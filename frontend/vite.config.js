@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const estoqueImagePath = fileURLToPath(
-  new URL("../backend/api/estoque/image.png", import.meta.url),
+  new URL("../backend/api/images/image.png", import.meta.url),
 );
 const productImagesDirectory = fileURLToPath(
   new URL("../backend/uploads/produtos/", import.meta.url),
@@ -20,7 +20,12 @@ export default defineConfig({
           "/images/estoque/image.png",
           (_request, response) => {
             response.setHeader("Content-Type", "image/png");
-            createReadStream(estoqueImagePath).pipe(response);
+            const stream = createReadStream(estoqueImagePath);
+             stream.on("error", () => {
+              response.statusCode = 404;
+              response.end("Imagem não encontrada");
+            });
+            stream.pipe(response);
           },
         );
         server.middlewares.use("/images/produtos", (request, response) => {

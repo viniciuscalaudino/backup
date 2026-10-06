@@ -5,6 +5,13 @@ require_once __DIR__ . '/../../config/database.php';
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+	http_response_code(405);
+	header('Allow: POST');
+	echo json_encode(['error' => 'Método não permitido']);
+	exit;
+}
+
 if (empty($_SESSION['user_id'])) {
 	http_response_code(401);
 	echo json_encode(['error' => 'Login obrigatório']);
@@ -47,6 +54,8 @@ try {
 		$total += $item['price'] * $item['quantity'];
 	}
 
+	$total = round($total, 2);
+
 	$orderQuery = $pdo->prepare('INSERT INTO orders (user_id, total) VALUES (?, ?)');
 	$orderQuery->execute([$_SESSION['user_id'], $total]);
 	$orderId = $pdo->lastInsertId();
@@ -77,8 +86,16 @@ try {
 		'message' => 'Pedido criado',
 		'order_id' => $orderId,
 	]);
-} catch (Throwable $exception) {
+} catch (PDOException $exception) {
 	if ($pdo->inTransaction()) {
+		$pdo->rollBack();
+	}
+
+	error_log($exception->getMessage());
+	http_response_code(500);
+	echo json_encode(['error' => 'Erro interno ao criar o pedido']);
+} catch (Exception $exception) {
+	if ($pdo->inTransaction()){
 		$pdo->rollBack();
 	}
 

@@ -1,3 +1,4 @@
+SET NAMES utf8mb4;
 CREATE DATABASE IF NOT EXISTS tech_store CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE tech_store;
 
@@ -64,11 +65,11 @@ CREATE TABLE order_items (
 
 INSERT INTO categories (name) VALUES ('Notebooks'),('Celulares'),('Acessórios');
 INSERT INTO products (category_id,name,description,price,stock,image) VALUES
-(1,'Notebook Tech Pro','Notebook para estudos e trabalho.',3499.90,10,'../backend/public/images/image.png'),
-(1,'Notebook Tech Air','Modelo leve para produtividade.',2899.90,8,'image.png'),
-(2,'Smartphone Tech X','Smartphone com ótimo desempenho.',1999.90,15,'/var/www/html/public/images/image.png'),
-(2,'Smartphone Tech Mini','Compacto e eficiente.',1299.90,12,NULL),
-(3,'Mouse Wireless','Mouse sem fio ergonômico.',89.90,30,NULL),
-(3,'Teclado Mecânico','Teclado mecânico para produtividade.',249.90,20,NULL),
-(3,'Headset Gamer','Headset com microfone.',179.90,0,NULL);
+(1,'Notebook Tech Pro','Notebook para estudos e trabalho.',3499.90,10,'notebook.png'),
+(1,'Notebook Tech Air','Modelo leve para produtividade.',2899.90,8,'notebook2.png'),
+(2,'Smartphone Tech X','Smartphone com ótimo desempenho.',1999.90,15,'smartphone.png'),
+(2,'Smartphone Tech Mini','Compacto e eficiente.',1299.90,12,'smartphone2.png'),
+(3,'Mouse Wireless','Mouse sem fio ergonômico.',89.90,30,'mouse.png'),
+(3,'Teclado Mecânico','Teclado mecânico para produtividade.',249.90,20,'teclado.png'),
+(3,'Headset Gamer','Headset com microfone.',179.90,0,'fone.png');
 INSERT INTO users(name, email, password, role) VALUES ("TimeFront", "emaildaempresa@gmail.com", "$2y$10$lckezau8B/CM4mjIEf0u0OTwOkzrk4.nbwDhkkNdPdNFmoUHwxTBO", "admin");

@@ -32,20 +32,46 @@ if ($quantity > $product['stock']) {
 	exit;
 }
 
-$pdo->beginTransaction();
-
-$cartQuery = $pdo->prepare(
-	'INSERT INTO carts (user_id) VALUES (?) '
-	. 'ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)'
+$currentQuery = $pdo->prepare(
+	'SELECT ci.quantity FROM cart_items ci '
+	. 'JOIN carts c ON c.id = ci.cart_id '
+	. 'WHERE c.user_id = ? AND ci.product_id = ?'
 );
-$cartQuery->execute([$_SESSION['user_id']]);
-$cartId = (int) $pdo->lastInsertId();
+$currentQuery->execute([$_SESSION['user_id'], $productId]);
+$inCart = (int) $currentQuery->fetchColumn();
 
-$itemQuery = $pdo->prepare(
-	'INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, ?) '
-	. 'ON DUPLICATE KEY UPDATE quantity = LEAST(quantity + VALUES(quantity), ?)'
-);
-$itemQuery->execute([$cartId, $productId, $quantity, $product['stock']]);
+if ($inCart + $quantity > $product['stock']) {
+	http_response_code(422);
+	echo json_encode([
+		'error' => 'Você já tem ' . $inCart . ' no carrinho e o estoque é ' . $product['stock'],
+	]);
+	exit;
+}
 
-$pdo->commit();
-echo json_encode(['message' => 'Produto adicionado']);
+try {
+	$pdo->beginTransaction();
+
+	$cartQuery = $pdo->prepare(
+		'INSERT INTO carts (user_id) VALUES (?) '
+		. 'ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)'
+	);
+	$cartQuery->execute([$_SESSION['user_id']]);
+	$cartId = (int) $pdo->lastInsertId();
+
+	$itemQuery = $pdo->prepare(
+		'INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, ?) '
+		. 'ON DUPLICATE KEY UPDATE quantity = LEAST(quantity + VALUES(quantity), ?)'
+	);
+	$itemQuery->execute([$cartId, $productId, $quantity, $product['stock']]);
+
+	$pdo->commit();
+	echo json_encode(['message' => 'Produto adicionado']);
+} catch (PDOException $exception) {
+	if ($pdo->inTransaction()) {
+		$pdo->rollBack();
+	}
+
+	error_log($exception->getMessage());
+	http_response_code(500);
+	echo json_encode(['error' => 'Erro interno ao adicionar o produto']);
+}
